@@ -8,9 +8,10 @@ class RandomData():
                  n_rows=1000,
                  n_cols=5,
                  n_classes=2,
-                 n_outliers=100,
-                 n_nulls=100,
-                 replacer=np.nan):
+                 n_outliers=None,
+                 n_nulls=None,
+                 replacer=np.nan,
+                 categories=None):
 
         self.n_rows = n_rows
         self.n_cols = n_cols
@@ -18,29 +19,65 @@ class RandomData():
         self.n_outliers = n_outliers
         self.n_nulls = n_nulls
         self.replacer = replacer
+        self.categories = categories
 
     def random_dataframe(self):
+
         index = self._create_index()
         cols = self._create_cols()
+
         X = self._create_matrix()
         X = X.T
         y = self._create_target()
         X = pd.DataFrame(X, columns=cols, index=index)
+
+        if self.n_nulls is not None:
+            self._generate_nulls(X)
+
+        if self.n_outliers is not None:
+            self._generate_outliers(X)
+
+        if self.categories is not None:
+            X_categ = self._add_category()
+            X = pd.concat([X, X_categ], axis=1)
+
         y = pd.DataFrame(y, columns=['target'], index=index)
+
         df = pd.concat([X, y], axis=1)
+
         return df
 
-    def generate_nulls(self, X):
+    def _add_category(self):
+
+        self.n_categs = len(self.categories)
+
+        columns = [f'col_{i}' for i in
+                   range(self.n_cols, self.n_categs + self.n_cols)]
+
+        X_categ = (
+            pd.DataFrame(
+                np.matrix(
+                    [[self._random_index(category) for i in range(self.n_rows)]
+                     for category in self.categories]).T
+            )
+        )
+
+        X_categ = pd.DataFrame(X_categ)
+        X_categ.columns = columns
+
+        return X_categ
+
+    def _generate_nulls(self, X):
         n_times = 0
         while n_times < self.n_nulls:
-            i, j = self._random_coordinates(X)
+            i, j = self._random_coordinates(X, self.n_rows, self.n_cols)
             X.iloc[i, j] = self.replacer
             n_times += 1
 
-    def generate_outliers(self, X):
+    def _generate_outliers(self, X):
         n_times = 0
         while n_times < self.n_outliers:
-            i, j = self._random_coordinates(X)
+            i, j = self._random_coordinates(X, self.n_rows, self.n_cols)
             try:
                 mean = np.nanmean(X.iloc[:, j])
                 replacer = np.random.normal(loc=mean, scale=4.0)
@@ -72,10 +109,15 @@ class RandomData():
         return y
 
     @staticmethod
-    def _random_coordinates(self, X):
+    def _random_coordinates(X, n_rows, n_cols):
         n_rows, n_cols = X.shape
         random_coordinate = (
-            np.random.randint(0, self.n_rows),
-            np.random.randint(0, self.n_cols)
+            np.random.randint(0, n_rows),
+            np.random.randint(0, n_cols)
         )
         return random_coordinate
+
+    @staticmethod
+    def _random_index(tags):
+        index = np.random.randint(0, len(tags))
+        return tags[index]

@@ -14,6 +14,7 @@ class OutlierAnalysis(BaseEstimator, TransformerMixin):
         return X
 
     def _which_method(self, X):
+
         if self.method == 'iqr':
             return self._outlier_iqr(X)
 
@@ -42,7 +43,7 @@ class OutlierAnalysis(BaseEstimator, TransformerMixin):
         for i in range(X_new.shape[1]):
             lb, ub = replacements.get(i)
             X_new[:, i][X_new[:, i] < lb] = lb
-            X_new[:, i][X_new[:, i] > lb] = ub
+            X_new[:, i][X_new[:, i] > ub] = ub
         return X_new
 
     @staticmethod
@@ -51,5 +52,5 @@ class OutlierAnalysis(BaseEstimator, TransformerMixin):
         iqr = q3 - q1
         lb = q1 - (iqr * thresh)
         ub = q3 + (iqr + thresh)
-#        outliers = np.where((x > ub) | (x < lb))
+#        outliers = np.where((x < lb) | (x > ub))
         return lb, ub
