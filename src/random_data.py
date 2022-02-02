@@ -10,7 +10,7 @@ class RandomData():
                  n_classes=2,
                  n_outliers=None,
                  n_nulls=None,
-                 replacer=np.nan,
+                 replacer=[np.nan],
                  categories=None):
 
         self.n_rows = n_rows
@@ -71,7 +71,7 @@ class RandomData():
         n_times = 0
         while n_times < self.n_nulls:
             i, j = self._random_coordinates(X, self.n_rows, self.n_cols)
-            X.iloc[i, j] = self.replacer
+            X.iloc[i, j] = self._random_index(self.replacer)
             n_times += 1
 
     def _generate_outliers(self, X):
