@@ -41,9 +41,9 @@ class OutlierAnalysis(BaseEstimator, TransformerMixin):
         X_new = X.copy()
         replacements = self.statistics_
         for i in range(X_new.shape[1]):
-            lb, ub = replacements.get(i)
-            X_new[:, i][X_new[:, i] < lb] = lb
-            X_new[:, i][X_new[:, i] > ub] = ub
+            self.lb, self.ub = replacements.get(i)
+            X_new[:, i][X_new[:, i] < self.lb] = self.lb
+            X_new[:, i][X_new[:, i] > self.ub] = self.ub
         return X_new
 
     @staticmethod
