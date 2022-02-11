@@ -1,11 +1,14 @@
-from outlier_analysis import OutlierAnalysis
-from missing_replace import MissingReplace, InfinityReplace, DropLowVariance
+from src.outlier_analysis import OutlierAnalysis
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
+from src.missing_replace import (MissingReplace,
+                                 InfinityReplace,
+                                 DropLowVariance)
+
 
 params = {'classifier__C': [0.001, 0.01, 0.1, 1.0, 10.0],
           'classifier__max_iter': [100, 500, 1000],
@@ -28,6 +31,7 @@ class Model():
                  cv=5,
                  missing_tags=[-1, -2],
                  missing_imputer='median',
+                 scoring='roc_auc',
                  outlier_thresh=3.0):
 
         self.cat_vars = cat_vars
@@ -38,6 +42,7 @@ class Model():
         self.test_size = test_size
         self.random_state = random_state
         self.cv = cv
+        self.scoring = scoring
 
     def train(self, X, y):
         X_train, X_test, y_train, y_test = (
@@ -50,7 +55,7 @@ class Model():
         model = GridSearchCV(grid,
                              param_grid=params,
                              cv=self.cv,
-                             scoring='roc_auc')
+                             scoring=self.scoring)
 
         model.fit(X_train, y_train)
 
