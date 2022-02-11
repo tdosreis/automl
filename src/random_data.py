@@ -101,7 +101,7 @@ class RandomData():
 
             try:
                 mean = np.nanmean(X.iloc[:, j])
-                replacer = np.random.normal(loc=mean, scale=4.0)
+                replacer = np.random.normal(loc=mean, scale=10.0)
                 X.iloc[i, j] = replacer
 
             except TypeError:
