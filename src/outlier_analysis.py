@@ -19,10 +19,10 @@ class OutlierAnalysis(BaseEstimator, TransformerMixin):
             return self._outlier_iqr(X)
 
         if self.method == 'z_score':
-            return self._z_score(X)
+            return self._outlier_z_score(X)
 
         if self.method == 'mod_z_score':
-            return self._mod_z_score(X)
+            return self._outlier_mod_z_score(X)
 
     def _replace_map(self, X):
         replacements = ({
@@ -41,9 +41,9 @@ class OutlierAnalysis(BaseEstimator, TransformerMixin):
         X_new = X.copy()
         replacements = self.statistics_
         for i in range(X_new.shape[1]):
-            lb, ub = replacements.get(i)
-            X_new[:, i][X_new[:, i] < lb] = lb
-            X_new[:, i][X_new[:, i] > ub] = ub
+            self.lb, self.ub = replacements.get(i)
+            X_new[:, i][X_new[:, i] < self.lb] = self.lb
+            X_new[:, i][X_new[:, i] > self.ub] = self.ub
         return X_new
 
     @staticmethod
@@ -52,5 +52,20 @@ class OutlierAnalysis(BaseEstimator, TransformerMixin):
         iqr = q3 - q1
         lb = q1 - (iqr * thresh)
         ub = q3 + (iqr + thresh)
-#        outliers = np.where((x < lb) | (x > ub))
+#         outliers = np.where((x < lb) | (x > ub))
+        return lb, ub
+
+    @staticmethod
+    def _outlier_z_score(x, thresh=3.0):
+        z_score = (x - x.mean())/(x.std())
+        boundaries = np.where(np.abs(z_score) < thresh)
+        lb, ub = x[boundaries].min(), x[boundaries].max()
+        return lb, ub
+
+    @staticmethod
+    def _outlier_mod_z_score(x, thresh=3.5):
+        mad = np.median(np.abs(x - np.median(x)))
+        mod_z_score = (0.6745)*((x - np.median(x)))/mad
+        boundaries = np.where(np.abs(mod_z_score) < thresh)
+        lb, ub = x[boundaries].min(), x[boundaries].max()
         return lb, ub
